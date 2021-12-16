@@ -15,11 +15,37 @@ class MarcaController extends Controller {
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function index() {
-        $marcas = $this->marca->with('modelos')->get();
-        return $marcas;
+    public function index(Request $request) {
+        if ($request->has('atributos_modelos')) {
+            $atributos_modelos = $request->atributos_modelos;
+            $marcas = $this->marca->with('modelos:id,' . $atributos_modelos);
+        } else {
+            $marcas = $this->marca->with('modelos');
+        }
+
+        if ($request->has('filtro')) {
+            $filtros = explode(';', $request->filtro);
+            foreach ($filtros as $key => $condicao) {
+
+                $c = explode(':', $condicao);
+                $marcas = $marcas->where($c[0], $c[1], $c[2]);
+
+            }
+        }
+
+        if ($request->has('atributos')) {
+            $atributos = $request->atributos;
+            $marcas = $marcas->selectRaw($atributos)->get();
+        } else {
+            $marcas = $marcas->get();
+        }
+
+
+        //$marcas = Marca::all();
+        //$marcas = $this->marca->with('modelos')->get();
+        return response()->json($marcas, 200);
     }
 
     /**
@@ -88,14 +114,15 @@ class MarcaController extends Controller {
         //remove o arquivo antigo caso um novo arquivo tenha sido enviado no request
         if ($request->file('imagem')) {
             Storage::disk('public')->delete($marca->imagem);
+            $imagem = $request->file('imagem');
+            $imagem_urn = $imagem->store('imagens', 'public');
         }
-
-        $imagem = $request->file('imagem');
-        $imagem_urn = $imagem->store('imagens', 'public');
 
         //preencher o objeto $marca com os dados do request
         $marca->fill($request->all());
-        $marca->imagem = $imagem_urn;
+        if (isset($imagem_urn)) {
+            $marca->imagem = $imagem_urn;
+        }
         //dd($marca->getAttributes());
         $marca->save();
         return response()->json($marca);

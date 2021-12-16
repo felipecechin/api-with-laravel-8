@@ -17,17 +17,35 @@ class ModeloController extends Controller {
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index() {
-        return response()->json($this->modelo->with('marca')->get());
-    }
+    public function index(Request $request) {
+        if ($request->has('atributos_marca')) {
+            $atributos_marca = $request->atributos_marca;
+            $modelos = $this->modelo->with('marca:id,' . $atributos_marca);
+        } else {
+            $modelos = $this->modelo->with('marca');
+        }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create() {
-        //
+        if ($request->has('filtro')) {
+            $filtros = explode(';', $request->filtro);
+            foreach ($filtros as $condicao) {
+
+                $c = explode(':', $condicao);
+                $modelos = $modelos->where($c[0], $c[1], $c[2]);
+
+            }
+        }
+
+        if ($request->has('atributos')) {
+            $atributos = $request->atributos;
+            $modelos = $modelos->selectRaw($atributos)->get();
+        } else {
+            $modelos = $modelos->get();
+        }
+
+        //$this->modelo->with('marca')->get()
+        return response()->json($modelos);
+        //all() -> criando um obj de consulta + get() = collection
+        //get() -> modificar a consulta -> collection
     }
 
     /**
@@ -106,13 +124,14 @@ class ModeloController extends Controller {
         //remove o arquivo antigo caso um novo arquivo tenha sido enviado no request
         if ($request->file('imagem')) {
             Storage::disk('public')->delete($modelo->imagem);
+            $imagem = $request->file('imagem');
+            $imagem_urn = $imagem->store('imagens/modelos', 'public');
         }
 
-        $imagem = $request->file('imagem');
-        $imagem_urn = $imagem->store('imagens/modelos', 'public');
-
         $modelo->fill($request->all());
-        $modelo->imagem = $imagem_urn;
+        if (isset($imagem_urn)) {
+            $modelo->imagem = $imagem_urn;
+        }
         $modelo->save();
         return response()->json($modelo);
     }
