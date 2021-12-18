@@ -6,13 +6,13 @@
                     <div class="card-header">Login teste watch</div>
 
                     <div class="card-body">
-                        <form method="POST" action="">
+                        <form method="POST" action="" @submit.prevent="login($event)">
                             <input type="hidden" name="_token" :value="csrf_token">
                             <div class="row mb-3">
                                 <label for="email" class="col-md-4 col-form-label text-md-right">E-mail</label>
 
                                 <div class="col-md-6">
-                                    <input id="email" type="email" class="form-control" name="email" value="" required autocomplete="email" autofocus>
+                                    <input id="email" type="email" class="form-control" name="email" v-model="email" required autocomplete="email" autofocus>
                                 </div>
                             </div>
 
@@ -20,7 +20,7 @@
                                 <label for="password" class="col-md-4 col-form-label text-md-right">Senha</label>
 
                                 <div class="col-md-6">
-                                    <input id="password" type="password" class="form-control" name="password" required autocomplete="current-password">
+                                    <input id="password" type="password" class="form-control" name="password" v-model="password" required autocomplete="current-password">
                                 </div>
                             </div>
 
@@ -56,6 +56,33 @@
 
 <script>
 export default {
-    props: ['csrf_token'] //data
+    props: ['csrf_token'], //data
+    data() {
+        return {
+            email: '',
+            password: ''
+        }
+    },
+    methods: {
+        login(e) {
+            let url = 'http://localhost:8000/api/login'
+            let configuracao = {
+                method: 'post',
+                body: new URLSearchParams({
+                    'email': this.email,
+                    'password': this.password
+                })
+            }
+            fetch(url, configuracao)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.token) {
+                        document.cookie = 'token=' + data.token + ';SameSite=Lax'
+                    }
+                    e.target.submit()
+                })
+
+        }
+    }
 }
 </script>
