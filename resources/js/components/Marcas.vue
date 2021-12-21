@@ -36,15 +36,87 @@
 
             </div>
         </div>
-        <modal-component id="modalMarca" titulo="Adicionar marca"></modal-component>
+        <modal-component id="modalMarca" titulo="Adicionar marca">
+            <template v-slot:alertas>
+                <alert-component tipo="success" :detalhes="transacaoDetalhes" titulo="Cadastro realizado com sucesso" v-if="transacaoStatus === 'adicionado'"></alert-component>
+                <alert-component tipo="danger" :detalhes="transacaoDetalhes" titulo="Erro ao tentar cadastrar a marca" v-if="transacaoStatus === 'erro'"></alert-component>
+            </template>
+
+            <template v-slot:conteudo>
+                <div class="form-group">
+                    <input-container-component titulo="Nome da marca" id="novoNome" id-help="novoNomeHelp" texto-ajuda="Informe o nome da marca.">
+                        <input type="text" class="form-control" id="novoNome" aria-describedby="novoNomeHelp" placeholder="Nome da marca" v-model="nomeMarca">
+                    </input-container-component>
+                </div>
+                <div class="form-group">
+                    <input-container-component titulo="Imagem" id="novoImagem" id-help="novoImagemHelp" texto-ajuda="Selecione uma imagem.">
+                        <input type="file" class="form-control" id="novoImagem" aria-describedby="novoImagemHelp" placeholder="Selecione uma imagem" @change="carregarImagem($event)">
+                    </input-container-component>
+                </div>
+            </template>
+
+            <template v-slot:rodape>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" @click="salvar()">Salvar</button>
+            </template>
+        </modal-component>
     </div>
 </template>
 
 <script>
-import Card from "./Card";
-import Modal from "./Modal";
-
 export default {
-    components: {Modal, Card}
+    computed: {
+        token() {
+
+            let token = document.cookie.split(';').find(indice => {
+                return indice.includes('token=')
+            })
+
+            token = token.split('=')[1]
+            token = 'Bearer ' + token
+
+            return token
+        }
+    },
+    data() {
+        return {
+            urlBase: 'http://localhost:8000/api/v1/marca',
+            nomeMarca: '',
+            arquivoImagem: [],
+            transacaoStatus: '',
+            transacaoDetalhes: []
+        }
+    },
+    methods: {
+        carregarImagem(e) {
+            this.arquivoImagem = e.target.files
+        },
+        salvar() {
+            console.log(this.nomeMarca, this.arquivoImagem[0])
+            let formData = new FormData();
+            formData.append('nome', this.nomeMarca)
+            formData.append('imagem', this.arquivoImagem[0])
+
+            let config = {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'Accept': 'application/json',
+                    'Authorization': this.token
+                }
+            }
+
+            axios.post(this.urlBase, formData, config)
+                .then(response => {
+                    this.transacaoStatus = 'adicionado'
+                    this.transacaoDetalhes = response
+                    console.log(response)
+                })
+                .catch(errors => {
+                    this.transacaoStatus = 'erro'
+                    this.transacaoDetalhes = errors.response
+                    console.log(errors.response)
+                })
+        }
+    }
 }
 </script>
