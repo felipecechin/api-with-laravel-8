@@ -25,12 +25,32 @@
 
                 <card-component titulo="Relação de marcas">
                     <template v-slot:conteudo>
-                        <table-component></table-component>
+                        <table-component :dados="marcas.data" :titulos="{
+                            id: {titulo: 'ID', tipo:'texto'},
+                            nome: {titulo: 'Nome', tipo:'texto'},
+                            imagem: {titulo: 'Imagem', tipo:'imagem'},
+                            created_at: {titulo: 'Data de criação', tipo:'data'}
+                        }"></table-component>
                     </template>
                     <template v-slot:rodape>
-                        <button type="button" class="btn btn-primary btn-sm float-end" data-bs-toggle="modal" data-bs-target="#modalMarca">
-                            Adicionar
-                        </button>
+                        <div class="row">
+                            <div class="col-10">
+                                <paginate-component>
+                                    <li v-for="(l, key) in marcas.links" :key="key"
+                                        :class="l.active ? 'page-item active' : 'page-item'"
+                                        @click="paginacao(l)"
+                                    >
+                                        <a class="page-link" v-html="l.label"></a>
+                                    </li>
+                                </paginate-component>
+                            </div>
+
+                            <div class="col">
+                                <button type="button" class="btn btn-primary btn-sm float-right" data-toggle="modal" data-target="#modalMarca">
+                                    Adicionar
+                                </button>
+                            </div>
+                        </div>
                     </template>
                 </card-component>
 
@@ -72,6 +92,9 @@ export default {
                 return indice.includes('token=')
             })
 
+            if (token === undefined) {
+                return '';
+            }
             token = token.split('=')[1]
             token = 'Bearer ' + token
 
@@ -84,10 +107,31 @@ export default {
             nomeMarca: '',
             arquivoImagem: [],
             transacaoStatus: '',
-            transacaoDetalhes: []
+            transacaoDetalhes: {},
+            marcas: {data: []}
         }
     },
     methods: {
+        paginacao(l) {
+            if (l.url) {
+                this.urlBase = l.url //ajustando a url de consulta com o parâmetro de página
+                this.carregarLista() //requisitando novamente os dados para nossa API
+            }
+        },
+        carregarLista() {
+            let config = {
+                headers: {
+                    'Authorization': this.token
+                }
+            }
+            axios.get(this.urlBase, config)
+                .then(response => {
+                    this.marcas = response.data
+                    console.log(this.marcas)
+                }).catch(errors => {
+                console.log(errors)
+            })
+        },
         carregarImagem(e) {
             this.arquivoImagem = e.target.files
         },
@@ -108,15 +152,22 @@ export default {
             axios.post(this.urlBase, formData, config)
                 .then(response => {
                     this.transacaoStatus = 'adicionado'
-                    this.transacaoDetalhes = response
-                    console.log(response)
+                    this.transacaoDetalhes = {
+                        mensagem: 'ID do registro: ' + response.data.id
+                    }
                 })
                 .catch(errors => {
                     this.transacaoStatus = 'erro'
-                    this.transacaoDetalhes = errors.response
+                    this.transacaoDetalhes = {
+                        mensagem: errors.response.data.message,
+                        dados: errors.response.data.errors
+                    }
                     console.log(errors.response)
                 })
         }
+    },
+    mounted() {
+        this.carregarLista();
     }
 }
 </script>
