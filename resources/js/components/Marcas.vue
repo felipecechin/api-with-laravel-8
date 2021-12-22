@@ -46,7 +46,7 @@
                             </div>
 
                             <div class="col">
-                                <button type="button" class="btn btn-primary btn-sm float-right" data-toggle="modal" data-target="#modalMarca">
+                                <button type="button" class="btn btn-primary btn-sm float-end" data-bs-toggle="modal" data-bs-target="#modalMarca">
                                     Adicionar
                                 </button>
                             </div>
