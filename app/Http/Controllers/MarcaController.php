@@ -37,7 +37,7 @@ class MarcaController extends Controller {
             $marcaRepository->selectAtributos($request->atributos);
         }
 
-        return response()->json($marcaRepository->getResultadoPaginado(3), 200);
+        return response()->json($marcaRepository->getResultadoPaginado(3));
     }
 
     /**
@@ -134,7 +134,6 @@ class MarcaController extends Controller {
         }
         //remove o arquivo antigo
         Storage::disk('public')->delete($marca->imagem);
-
         $marca->delete();
         return response()->json(['msg' => 'A marca foi removida com sucesso!']);
     }

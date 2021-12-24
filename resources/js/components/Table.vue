@@ -4,6 +4,7 @@
             <thead>
             <tr>
                 <th v-for="(t,key) in titulos" :key="key" scope="col">{{ t.titulo }}</th>
+                <th v-if="visualizar.visivel || atualizar || remover.visivel"></th>
             </tr>
             </thead>
             <tbody>
@@ -16,6 +17,15 @@
                     <span v-if="titulos[chaveValor].tipo === 'imagem'">
                         <img :src="'/storage/'+valor" width="30" height="30" alt="">
                     </span>
+                </td>
+                <td v-if="visualizar.visivel || atualizar || remover.visivel">
+                    <button v-if="visualizar.visivel" class="btn btn-outline-primary btn-sm" :data-bs-toggle="visualizar.dataToggle" :data-bs-target="visualizar.dataTarget" @click="setStore(obj)">
+                        Visualizar
+                    </button>
+                    <button v-if="atualizar" class="btn btn-outline-primary btn-sm">Atualizar</button>
+                    <button v-if="remover.visivel" class="btn btn-outline-danger btn-sm" :data-bs-toggle="remover.dataToggle" :data-bs-target="remover.dataTarget" @click="setStore(obj)">
+                        Remover
+                    </button>
                 </td>
             </tr>
             <!--            <tr v-for="obj in dados" :key="obj.id">-->
@@ -35,7 +45,14 @@
 
 <script>
 export default {
-    props: ['dados', 'titulos'],
+    props: ['dados', 'titulos', 'visualizar', 'atualizar', 'remover'],
+    methods: {
+        setStore(obj) {
+            this.$store.state.transacao.status = ''
+            this.$store.state.transacao.mensagem = ''
+            this.$store.state.item = obj
+        }
+    },
     computed: {
         dadosFiltrados() {
             let campos = Object.keys(this.titulos)
