@@ -27,7 +27,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //Route::resource('cliente', \App\Http\Controllers\ClienteController::class);
 Route::prefix('v1')->middleware('jwt.auth')->group(function () {
     Route::post('me', [AuthController::class, 'me']);
-    Route::post('refresh', [AuthController::class, 'refresh']);
     Route::post('logout', [AuthController::class, 'logout']);
     Route::apiResource('cliente', ClienteController::class);
     Route::apiResource('carro', CarroController::class);
@@ -38,5 +37,6 @@ Route::prefix('v1')->middleware('jwt.auth')->group(function () {
 
 
 Route::post('login', [AuthController::class, 'login']);
+Route::post('refresh', [AuthController::class, 'refresh']);
 
 
